@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+
+export const dynamic = 'force-dynamic';
 import { AppShell } from '@/components/layout';
 import { PortfolioContent } from '@/components/portfolio/PortfolioContent';
 
