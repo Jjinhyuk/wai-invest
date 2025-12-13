@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface HeaderProps {
@@ -19,7 +19,13 @@ interface HeaderProps {
 export function Header({ user }: HeaderProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const [mounted, setMounted] = useState(false);
   const { theme, toggleTheme } = useTheme();
+
+  // Prevent hydration mismatch for theme icon
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const initials = user?.full_name
     ? user.full_name
@@ -57,9 +63,14 @@ export function Header({ user }: HeaderProps) {
           size="icon"
           className="h-11 w-11 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700"
           onClick={toggleTheme}
+          suppressHydrationWarning
         >
-          {theme === 'dark' ? (
-            <Sun className="h-5 w-5 text-yellow-500" />
+          {mounted ? (
+            theme === 'dark' ? (
+              <Sun className="h-5 w-5 text-yellow-500" />
+            ) : (
+              <Moon className="h-5 w-5 text-slate-600" />
+            )
           ) : (
             <Moon className="h-5 w-5 text-slate-600" />
           )}

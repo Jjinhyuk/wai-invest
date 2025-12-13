@@ -61,7 +61,13 @@ export function MarketContent({
   topScorers,
   drawdownOpportunities,
 }: MarketContentProps) {
-  const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    setLastUpdate(new Date());
+  }, []);
 
   // Fear & Greed calculation (simplified)
   const vix = marketIndicators.find(i => i.symbol === 'VIX')?.value || 20;
@@ -79,7 +85,7 @@ export function MarketContent({
         </div>
         <div className="flex items-center gap-2 text-sm text-slate-500">
           <Clock className="h-4 w-4" />
-          <span>업데이트: {lastUpdate.toLocaleTimeString('ko-KR')}</span>
+          <span>업데이트: {mounted && lastUpdate ? lastUpdate.toLocaleTimeString('ko-KR') : '--:--:--'}</span>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setLastUpdate(new Date())}>
             <RefreshCw className="h-4 w-4" />
           </Button>
@@ -97,9 +103,11 @@ export function MarketContent({
               <div>
                 <p className="text-slate-300 text-sm">미국 증시 상태</p>
                 <p className="text-2xl font-bold mt-1">
-                  {new Date().getHours() >= 22 || new Date().getHours() < 5
-                    ? '🟢 거래 중 (Pre/After)'
-                    : '⚪ 휴장'}
+                  {mounted && lastUpdate
+                    ? (lastUpdate.getHours() >= 22 || lastUpdate.getHours() < 5
+                        ? '🟢 거래 중 (Pre/After)'
+                        : '⚪ 휴장')
+                    : '⏳ 확인 중...'}
                 </p>
                 <p className="text-slate-400 text-sm mt-1">
                   정규장: 23:30 - 06:00 (KST)
