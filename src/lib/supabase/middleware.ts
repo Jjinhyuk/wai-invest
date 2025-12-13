@@ -6,66 +6,81 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const isAuthPage = request.nextUrl.pathname === '/login';
-  const isPublicPage = request.nextUrl.pathname === '/';
-  const isAuthCallback = request.nextUrl.pathname.startsWith('/auth/callback');
-  const isApiRoute = request.nextUrl.pathname.startsWith('/api');
-  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin');
-
-  // Allow public routes
-  if (isPublicPage || isAuthCallback || isApiRoute) {
+  // If env vars are not set, just pass through
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Supabase environment variables not set in middleware');
     return supabaseResponse;
   }
 
-  // Redirect to dashboard if already logged in and trying to access login
-  if (isAuthPage && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
+  try {
+    const supabase = createServerClient(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+            supabaseResponse = NextResponse.next({
+              request,
+            });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            );
+          },
+        },
+      }
+    );
 
-  // Redirect to login if not logged in
-  if (!user && !isAuthPage) {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  // Check admin access
-  if (isAdminRoute && user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    const isAuthPage = request.nextUrl.pathname === '/login';
+    const isPublicPage = request.nextUrl.pathname === '/';
+    const isAuthCallback = request.nextUrl.pathname.startsWith('/auth/callback');
+    const isApiRoute = request.nextUrl.pathname.startsWith('/api');
+    const isAdminRoute = request.nextUrl.pathname.startsWith('/admin');
 
-    if (profile?.role !== 'admin') {
+    // Allow public routes
+    if (isPublicPage || isAuthCallback || isApiRoute) {
+      return supabaseResponse;
+    }
+
+    // Redirect to dashboard if already logged in and trying to access login
+    if (isAuthPage && user) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
-  }
 
-  return supabaseResponse;
+    // Redirect to login if not logged in
+    if (!user && !isAuthPage) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    // Check admin access
+    if (isAdminRoute && user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.role !== 'admin') {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
+    }
+
+    return supabaseResponse;
+  } catch (error) {
+    console.error('Middleware error:', error);
+    // On error, allow the request to continue
+    return supabaseResponse;
+  }
 }
