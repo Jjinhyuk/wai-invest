@@ -7,17 +7,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { formatCurrency, formatPercent, formatLargeNumber } from '@/lib/utils';
+import { DataFreshness } from '@/components/common/DataFreshness';
 
 interface DashboardContentProps {
   alertCandidates: any[];
   holdings: any[];
   watchlistCount: number;
+  lastDataUpdate?: string | null;
 }
 
 export function DashboardContent({
   alertCandidates,
   holdings,
   watchlistCount,
+  lastDataUpdate,
 }: DashboardContentProps) {
   // Calculate portfolio summary
   const totalValue = holdings.reduce((sum, h) => {
@@ -44,9 +47,12 @@ export function DashboardContent({
   return (
     <div className="space-y-8">
       {/* Page header */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">대시보드</h1>
-        <p className="text-slate-500 mt-1">오늘의 투자 현황을 한눈에 확인하세요</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">대시보드</h1>
+          <p className="text-slate-500 mt-1">오늘의 투자 현황을 한눈에 확인하세요</p>
+        </div>
+        <DataFreshness lastUpdate={lastDataUpdate} />
       </div>
 
       {/* Quick stats */}

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 export const dynamic = 'force-dynamic';
 import { AppShell } from '@/components/layout';
 import { DashboardContent } from '@/components/dashboard/DashboardContent';
+import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -33,27 +34,42 @@ export default async function DashboardPage() {
     .select('*, tickers(*), metrics_latest(*)')
     .eq('user_id', user.id);
 
+  // Get watchlist
+  const { data: watchlist } = await supabase
+    .from('watchlists')
+    .select('id')
+    .eq('user_id', user.id)
+    .single();
+
   // Get watchlist count
   const { count: watchlistCount } = await supabase
     .from('watchlist_items')
     .select('*', { count: 'exact', head: true })
-    .eq('watchlist_id', (
-      await supabase
-        .from('watchlists')
-        .select('id')
-        .eq('user_id', user.id)
-        .single()
-    ).data?.id || '');
+    .eq('watchlist_id', watchlist?.id || '');
+
+  // Get last data update time
+  const { data: lastUpdate } = await supabase
+    .from('metrics_latest')
+    .select('updated_at')
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .single();
 
   return (
     <AppShell
       user={profile || undefined}
       isAdmin={profile?.role === 'admin'}
     >
+      <OnboardingModal
+        userId={user.id}
+        hasPortfolio={(holdings?.length || 0) > 0}
+        hasWatchlist={(watchlistCount || 0) > 0}
+      />
       <DashboardContent
         alertCandidates={alertCandidates || []}
         holdings={holdings || []}
         watchlistCount={watchlistCount || 0}
+        lastDataUpdate={lastUpdate?.updated_at}
       />
     </AppShell>
   );

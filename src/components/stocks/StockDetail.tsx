@@ -264,18 +264,70 @@ export function StockDetail({
               <Card className="border-0 shadow-md">
                 <CardContent className="pt-6">
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-8">
-                    <MetricRow label="P/E 비율" value={metrics?.pe?.toFixed(2)} />
-                    <MetricRow label="P/S 비율" value={metrics?.ps?.toFixed(2)} />
-                    <MetricRow label="P/B 비율" value={metrics?.pb?.toFixed(2)} />
-                    <MetricRow label="PEG 비율" value={metrics?.peg?.toFixed(2)} />
-                    <MetricRow label="ROE (자기자본수익률)" value={metrics?.roe ? formatPercent(metrics.roe * 100) : '-'} />
-                    <MetricRow label="ROIC (투자자본수익률)" value={metrics?.roic ? formatPercent(metrics.roic * 100) : '-'} />
-                    <MetricRow label="매출총이익률" value={metrics?.gross_margin ? formatPercent(metrics.gross_margin * 100) : '-'} />
-                    <MetricRow label="영업이익률" value={metrics?.operating_margin ? formatPercent(metrics.operating_margin * 100) : '-'} />
-                    <MetricRow label="순이익률" value={metrics?.net_margin ? formatPercent(metrics.net_margin * 100) : '-'} />
-                    <MetricRow label="매출 성장률 (YoY)" value={metrics?.revenue_growth_yoy ? formatPercent(metrics.revenue_growth_yoy * 100) : '-'} />
-                    <MetricRow label="EPS 성장률 (YoY)" value={metrics?.eps_growth_yoy ? formatPercent(metrics.eps_growth_yoy * 100) : '-'} />
-                    <MetricRow label="배당 수익률" value={metrics?.dividend_yield ? formatPercent(metrics.dividend_yield * 100) : '-'} />
+                    <MetricRow
+                      label="P/E 비율"
+                      value={metrics?.pe?.toFixed(2)}
+                      tooltip="주가수익비율. 주가 ÷ 주당순이익. 낮을수록 저평가, 보통 15~25가 적정"
+                    />
+                    <MetricRow
+                      label="P/S 비율"
+                      value={metrics?.ps?.toFixed(2)}
+                      tooltip="주가매출비율. 주가 ÷ 주당매출. 성장주 평가에 유용, 보통 2 이하가 양호"
+                    />
+                    <MetricRow
+                      label="P/B 비율"
+                      value={metrics?.pb?.toFixed(2)}
+                      tooltip="주가순자산비율. 주가 ÷ 주당순자산. 1 미만이면 자산가치 대비 저평가"
+                    />
+                    <MetricRow
+                      label="PEG 비율"
+                      value={metrics?.peg?.toFixed(2)}
+                      tooltip="주가수익성장비율. P/E ÷ 성장률. 1 미만이면 저평가, 1.5 이하가 양호"
+                      highlight={metrics?.peg != null && metrics.peg <= 1.5}
+                    />
+                    <MetricRow
+                      label="ROE"
+                      value={metrics?.roe ? formatPercent(metrics.roe * 100) : '-'}
+                      tooltip="자기자본수익률. 순이익 ÷ 자기자본. 15% 이상이면 우수, 높을수록 효율적 경영"
+                      highlight={metrics?.roe != null && metrics.roe >= 0.15}
+                    />
+                    <MetricRow
+                      label="ROIC"
+                      value={metrics?.roic ? formatPercent(metrics.roic * 100) : '-'}
+                      tooltip="투자자본수익률. 영업이익 ÷ 투자자본. 10% 이상이면 양호, 워런 버핏이 중시하는 지표"
+                      highlight={metrics?.roic != null && metrics.roic >= 0.1}
+                    />
+                    <MetricRow
+                      label="매출총이익률"
+                      value={metrics?.gross_margin ? formatPercent(metrics.gross_margin * 100) : '-'}
+                      tooltip="(매출 - 매출원가) ÷ 매출. 40% 이상이면 경쟁력 있는 사업 모델"
+                    />
+                    <MetricRow
+                      label="영업이익률"
+                      value={metrics?.operating_margin ? formatPercent(metrics.operating_margin * 100) : '-'}
+                      tooltip="영업이익 ÷ 매출. 15% 이상이면 양호, 사업의 수익성을 나타냄"
+                    />
+                    <MetricRow
+                      label="순이익률"
+                      value={metrics?.net_margin ? formatPercent(metrics.net_margin * 100) : '-'}
+                      tooltip="순이익 ÷ 매출. 10% 이상이면 양호, 최종적인 수익성 지표"
+                    />
+                    <MetricRow
+                      label="매출 성장률"
+                      value={metrics?.revenue_growth_yoy ? formatPercent(metrics.revenue_growth_yoy * 100) : '-'}
+                      tooltip="전년 대비 매출 증가율. 10% 이상이면 성장주, 20% 이상이면 고성장"
+                      highlight={metrics?.revenue_growth_yoy != null && metrics.revenue_growth_yoy >= 0.1}
+                    />
+                    <MetricRow
+                      label="EPS 성장률"
+                      value={metrics?.eps_growth_yoy ? formatPercent(metrics.eps_growth_yoy * 100) : '-'}
+                      tooltip="전년 대비 주당순이익 증가율. 꾸준한 EPS 성장은 주가 상승의 핵심 동력"
+                    />
+                    <MetricRow
+                      label="배당 수익률"
+                      value={metrics?.dividend_yield ? formatPercent(metrics.dividend_yield * 100) : '-'}
+                      tooltip="연간 배당금 ÷ 주가. 2~4%가 적정, 너무 높으면 배당 지속성 확인 필요"
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -400,11 +452,45 @@ export function StockDetail({
   );
 }
 
-function MetricRow({ label, value }: { label: string; value: string | undefined }) {
+function MetricRow({
+  label,
+  value,
+  tooltip,
+  highlight
+}: {
+  label: string;
+  value: string | undefined;
+  tooltip?: string;
+  highlight?: boolean;
+}) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
   return (
     <div className="flex justify-between py-2 border-b border-slate-100 last:border-0">
-      <span className="text-sm text-slate-500">{label}</span>
-      <span className="font-semibold text-slate-900">{value || '-'}</span>
+      <div
+        className="relative flex items-center gap-1"
+        onMouseEnter={() => tooltip && setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+      >
+        <span className="text-sm text-slate-500">{label}</span>
+        {tooltip && (
+          <>
+            <span className="inline-flex items-center justify-center w-4 h-4 text-xs text-slate-400 hover:text-slate-600 cursor-help rounded-full border border-slate-300 hover:border-slate-400 transition-colors">
+              ?
+            </span>
+            {showTooltip && (
+              <div className="absolute left-0 bottom-full mb-2 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg shadow-lg z-50 w-64 leading-relaxed">
+                {tooltip}
+                <div className="absolute top-full left-4 border-4 border-transparent border-t-slate-800" />
+              </div>
+            )}
+          </>
+        )}
+      </div>
+      <span className={`font-semibold ${highlight ? 'text-green-600' : 'text-slate-900'}`}>
+        {value || '-'}
+        {highlight && <span className="ml-1 text-green-500">✓</span>}
+      </span>
     </div>
   );
 }

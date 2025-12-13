@@ -23,23 +23,44 @@ const presets = [
   {
     id: 'quality',
     label: '퀄리티 성장',
-    description: '높은 ROE, FCF+, 꾸준한 성장세',
+    description: '높은 수익성과 꾸준한 성장세를 가진 우량 기업',
     icon: Sparkles,
     color: 'bg-blue-500',
+    filters: [
+      { label: 'ROE', value: '≥ 15%', description: '자기자본수익률 15% 이상' },
+      { label: 'FCF', value: '양수', description: '잉여현금흐름 양수' },
+      { label: '매출 성장', value: '≥ 10%', description: '연간 매출 성장률 10% 이상' },
+      { label: '품질 점수', value: '≥ 70', description: '품질 점수 70점 이상' },
+    ],
+    sortBy: 'score_quality' as SortField,
   },
   {
     id: 'value',
     label: '가치 투자',
-    description: '낮은 PEG, 합리적인 퀄리티',
+    description: '저평가된 우량 기업을 찾는 워런 버핏 스타일',
     icon: Target,
     color: 'bg-green-500',
+    filters: [
+      { label: 'PEG', value: '≤ 1.5', description: '주가수익성장비율 1.5 이하 (저평가)' },
+      { label: 'P/E', value: '≤ 25', description: '주가수익비율 25 이하' },
+      { label: '부채비율', value: '≤ 1.0', description: 'D/E 비율 1 이하' },
+      { label: '종합 점수', value: '≥ 50', description: '종합 점수 50점 이상' },
+    ],
+    sortBy: 'peg' as SortField,
   },
   {
     id: 'turnaround',
     label: '턴어라운드',
-    description: '고점 대비 큰 하락 + 좋은 펀더멘털',
+    description: '급락했지만 펀더멘털이 좋은 반등 후보',
     icon: Zap,
     color: 'bg-orange-500',
+    filters: [
+      { label: '52주 하락', value: '≥ 30%', description: '고점 대비 30% 이상 하락' },
+      { label: '종합 점수', value: '≥ 60', description: '펀더멘털 점수 60점 이상' },
+      { label: 'FCF', value: '양수', description: '잉여현금흐름 양수' },
+      { label: '유동비율', value: '≥ 1.0', description: '단기 유동성 양호' },
+    ],
+    sortBy: 'drawdown' as SortField,
   },
 ];
 
@@ -136,7 +157,11 @@ export function ScreenerContent({
           return (
             <button
               key={preset.id}
-              onClick={() => setActivePreset(preset.id)}
+              onClick={() => {
+                setActivePreset(preset.id);
+                setSortField(preset.sortBy);
+                setSortAsc(preset.id === 'value'); // PEG는 낮을수록 좋으므로 오름차순
+              }}
               className={`relative p-5 rounded-2xl border-2 text-left transition-all ${
                 isActive
                   ? 'border-blue-500 bg-blue-50 shadow-md'
@@ -165,6 +190,54 @@ export function ScreenerContent({
           );
         })}
       </div>
+
+      {/* Active preset filter conditions */}
+      {activePreset && (
+        <Card className="border-0 shadow-sm bg-gradient-to-r from-slate-50 to-white">
+          <CardContent className="p-5">
+            <div className="flex items-start gap-4">
+              <div className={`w-10 h-10 ${presets.find(p => p.id === activePreset)?.color} rounded-xl flex items-center justify-center shrink-0`}>
+                {(() => {
+                  const Icon = presets.find(p => p.id === activePreset)?.icon || Sparkles;
+                  return <Icon className="w-5 h-5 text-white" />;
+                })()}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-slate-900">
+                    {presets.find(p => p.id === activePreset)?.label} 전략 필터 조건
+                  </h4>
+                  <Badge className="bg-blue-100 text-blue-700 border-0">
+                    {filteredStocks.length}개 종목 해당
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {presets.find(p => p.id === activePreset)?.filters.map((filter, idx) => (
+                    <div
+                      key={idx}
+                      className="group relative"
+                    >
+                      <Badge
+                        variant="outline"
+                        className="bg-white border-slate-200 text-slate-700 px-3 py-1.5 cursor-help hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                      >
+                        <span className="font-medium">{filter.label}</span>
+                        <span className="mx-1.5 text-slate-400">|</span>
+                        <span className="text-blue-600">{filter.value}</span>
+                      </Badge>
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                        {filter.description}
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Search and filters */}
       <div className="flex flex-col sm:flex-row gap-4">

@@ -13,6 +13,7 @@ import {
   Database,
   Users,
   ChevronRight,
+  Star,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,12 @@ const navItems: NavItem[] = [
     label: '스크리너',
     icon: Search,
     description: '종목 검색 및 필터'
+  },
+  {
+    href: '/watchlist',
+    label: '관심 종목',
+    icon: Star,
+    description: '추적 중인 종목'
   },
   {
     href: '/portfolio',
