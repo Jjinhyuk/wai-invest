@@ -35,6 +35,12 @@ const navItems: NavItem[] = [
     description: '요약 및 알림'
   },
   {
+    href: '/market',
+    label: '시장 현황',
+    icon: TrendingUp,
+    description: '지수/섹터/지표'
+  },
+  {
     href: '/screener',
     label: '스크리너',
     icon: Search,
