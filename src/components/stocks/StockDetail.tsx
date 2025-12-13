@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, Star, StarOff, Bell, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, Star, StarOff, Bell, Plus, Minus, TrendingUp, TrendingDown, Building2, BarChart3, Shield, Wallet, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -128,46 +128,55 @@ export function StockDetail({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Back button */}
-      <Button variant="ghost" asChild className="gap-2">
+      <Button variant="ghost" asChild className="gap-2 text-slate-600 hover:text-slate-900 -ml-2">
         <Link href="/screener">
           <ArrowLeft className="h-4 w-4" />
-          Back to Screener
+          스크리너로 돌아가기
         </Link>
       </Button>
 
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">{ticker.symbol}</h1>
-            <Badge variant="outline">{ticker.sector || 'N/A'}</Badge>
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">
+            {ticker.symbol.slice(0, 2)}
           </div>
-          <p className="text-lg text-muted-foreground mt-1">{ticker.name}</p>
-          {metrics?.as_of && (
-            <p className="text-sm text-muted-foreground mt-1">
-              Data as of {formatDate(metrics.as_of)}
-            </p>
-          )}
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-slate-900">{ticker.symbol}</h1>
+              <Badge className="bg-slate-100 text-slate-700 border-0">{ticker.sector || '섹터 미분류'}</Badge>
+            </div>
+            <p className="text-lg text-slate-500 mt-1">{ticker.name}</p>
+            {metrics?.as_of && (
+              <p className="text-sm text-slate-400 mt-1">
+                데이터 기준일: {formatDate(metrics.as_of)}
+              </p>
+            )}
+          </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={toggleWatchlist}>
+          <Button
+            variant="outline"
+            onClick={toggleWatchlist}
+            className={`rounded-xl border-2 ${isInWatchlist ? 'border-yellow-300 bg-yellow-50 hover:bg-yellow-100' : 'border-slate-200'}`}
+          >
             {isInWatchlist ? (
               <>
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-2" />
-                In Watchlist
+                관심 종목 등록됨
               </>
             ) : (
               <>
                 <StarOff className="h-4 w-4 mr-2" />
-                Add to Watchlist
+                관심 종목 추가
               </>
             )}
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" className="rounded-xl border-slate-200">
             <Bell className="h-4 w-4 mr-2" />
-            Set Alert
+            알림 설정
           </Button>
         </div>
       </div>
@@ -176,123 +185,142 @@ export function StockDetail({
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Summary card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Summary</CardTitle>
+          <Card className="border-0 shadow-md overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-blue-600" />
+                종목 요약
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Price</p>
-                  <p className="text-2xl font-bold">{formatCurrency(metrics?.price)}</p>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="p-4 bg-blue-50 rounded-xl">
+                  <p className="text-sm text-blue-600 font-medium">현재가</p>
+                  <p className="text-2xl font-bold text-blue-900 mt-1">{formatCurrency(metrics?.price)}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Market Cap</p>
-                  <p className="text-xl font-semibold">{formatMarketCap(metrics?.market_cap)}</p>
+                <div className="p-4 bg-slate-50 rounded-xl">
+                  <p className="text-sm text-slate-600 font-medium">시가총액</p>
+                  <p className="text-xl font-bold text-slate-900 mt-1">{formatMarketCap(metrics?.market_cap)}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">52w Drawdown</p>
-                  <p className={`text-xl font-semibold ${drawdown && drawdown > 20 ? 'text-red-600' : ''}`}>
+                <div className="p-4 bg-red-50 rounded-xl">
+                  <p className="text-sm text-red-600 font-medium">52주 고점 대비</p>
+                  <p className={`text-xl font-bold mt-1 ${drawdown && drawdown > 20 ? 'text-red-600' : 'text-slate-900'}`}>
                     {drawdown ? `-${drawdown.toFixed(1)}%` : '-'}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Score</p>
-                  <p className={`text-xl font-semibold ${getScoreColor(metrics?.score_total)}`}>
-                    {metrics?.score_total?.toFixed(0) || '-'}/100
+                <div className="p-4 bg-green-50 rounded-xl">
+                  <p className="text-sm text-green-600 font-medium">종합 점수</p>
+                  <p className={`text-xl font-bold mt-1 ${getScoreColor(metrics?.score_total)}`}>
+                    {metrics?.score_total?.toFixed(0) || '-'}점
                   </p>
                 </div>
               </div>
 
               {/* 52-week position */}
               {position52w !== null && (
-                <div className="mt-6">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>52w Low: {formatCurrency(metrics?.week52_low)}</span>
-                    <span>52w High: {formatCurrency(metrics?.week52_high)}</span>
+                <div className="mt-6 p-4 bg-slate-50 rounded-xl">
+                  <p className="text-sm font-semibold text-slate-700 mb-3">52주 가격 범위</p>
+                  <div className="flex justify-between text-sm mb-2 text-slate-500">
+                    <span>최저: {formatCurrency(metrics?.week52_low)}</span>
+                    <span>최고: {formatCurrency(metrics?.week52_high)}</span>
                   </div>
-                  <Progress value={position52w} className="h-3" />
+                  <div className="relative">
+                    <Progress value={position52w} className="h-3" />
+                    <div
+                      className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-blue-600 rounded-full border-2 border-white shadow"
+                      style={{ left: `${position52w}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-slate-400 text-center mt-2">
+                    현재 가격은 52주 범위의 {position52w.toFixed(0)}% 위치에 있습니다
+                  </p>
                 </div>
               )}
 
               {/* Explain text */}
               {metrics?.explain_text && (
-                <div className="mt-4 p-3 bg-muted rounded-lg">
-                  <p className="text-sm">{metrics.explain_text}</p>
+                <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                  <p className="text-sm text-blue-800">{metrics.explain_text}</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Detailed metrics tabs */}
-          <Tabs defaultValue="metrics">
-            <TabsList>
-              <TabsTrigger value="metrics">Key Metrics</TabsTrigger>
-              <TabsTrigger value="scores">Score Breakdown</TabsTrigger>
-              <TabsTrigger value="risk">Risk Factors</TabsTrigger>
+          <Tabs defaultValue="metrics" className="space-y-4">
+            <TabsList className="bg-slate-100 p-1 rounded-xl">
+              <TabsTrigger value="metrics" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                핵심 지표
+              </TabsTrigger>
+              <TabsTrigger value="scores" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                점수 분석
+              </TabsTrigger>
+              <TabsTrigger value="risk" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                리스크 요인
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="metrics">
-              <Card>
+              <Card className="border-0 shadow-md">
                 <CardContent className="pt-6">
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-8">
-                    <MetricRow label="P/E Ratio" value={metrics?.pe?.toFixed(2)} />
-                    <MetricRow label="P/S Ratio" value={metrics?.ps?.toFixed(2)} />
-                    <MetricRow label="P/B Ratio" value={metrics?.pb?.toFixed(2)} />
-                    <MetricRow label="PEG Ratio" value={metrics?.peg?.toFixed(2)} />
-                    <MetricRow label="ROE" value={metrics?.roe ? formatPercent(metrics.roe * 100) : '-'} />
-                    <MetricRow label="ROIC" value={metrics?.roic ? formatPercent(metrics.roic * 100) : '-'} />
-                    <MetricRow label="Gross Margin" value={metrics?.gross_margin ? formatPercent(metrics.gross_margin * 100) : '-'} />
-                    <MetricRow label="Operating Margin" value={metrics?.operating_margin ? formatPercent(metrics.operating_margin * 100) : '-'} />
-                    <MetricRow label="Net Margin" value={metrics?.net_margin ? formatPercent(metrics.net_margin * 100) : '-'} />
-                    <MetricRow label="Revenue Growth YoY" value={metrics?.revenue_growth_yoy ? formatPercent(metrics.revenue_growth_yoy * 100) : '-'} />
-                    <MetricRow label="EPS Growth YoY" value={metrics?.eps_growth_yoy ? formatPercent(metrics.eps_growth_yoy * 100) : '-'} />
-                    <MetricRow label="Dividend Yield" value={metrics?.dividend_yield ? formatPercent(metrics.dividend_yield * 100) : '-'} />
+                    <MetricRow label="P/E 비율" value={metrics?.pe?.toFixed(2)} />
+                    <MetricRow label="P/S 비율" value={metrics?.ps?.toFixed(2)} />
+                    <MetricRow label="P/B 비율" value={metrics?.pb?.toFixed(2)} />
+                    <MetricRow label="PEG 비율" value={metrics?.peg?.toFixed(2)} />
+                    <MetricRow label="ROE (자기자본수익률)" value={metrics?.roe ? formatPercent(metrics.roe * 100) : '-'} />
+                    <MetricRow label="ROIC (투자자본수익률)" value={metrics?.roic ? formatPercent(metrics.roic * 100) : '-'} />
+                    <MetricRow label="매출총이익률" value={metrics?.gross_margin ? formatPercent(metrics.gross_margin * 100) : '-'} />
+                    <MetricRow label="영업이익률" value={metrics?.operating_margin ? formatPercent(metrics.operating_margin * 100) : '-'} />
+                    <MetricRow label="순이익률" value={metrics?.net_margin ? formatPercent(metrics.net_margin * 100) : '-'} />
+                    <MetricRow label="매출 성장률 (YoY)" value={metrics?.revenue_growth_yoy ? formatPercent(metrics.revenue_growth_yoy * 100) : '-'} />
+                    <MetricRow label="EPS 성장률 (YoY)" value={metrics?.eps_growth_yoy ? formatPercent(metrics.eps_growth_yoy * 100) : '-'} />
+                    <MetricRow label="배당 수익률" value={metrics?.dividend_yield ? formatPercent(metrics.dividend_yield * 100) : '-'} />
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="scores">
-              <Card>
+              <Card className="border-0 shadow-md">
                 <CardContent className="pt-6 space-y-4">
-                  <ScoreBar label="Quality (40%)" score={metrics?.score_quality} />
-                  <ScoreBar label="Growth (30%)" score={metrics?.score_growth} />
-                  <ScoreBar label="Value (20%)" score={metrics?.score_value} />
-                  <ScoreBar label="Risk (10%)" score={metrics?.score_risk} />
+                  <ScoreBar label="퀄리티 (40%)" score={metrics?.score_quality} />
+                  <ScoreBar label="성장성 (30%)" score={metrics?.score_growth} />
+                  <ScoreBar label="가치 (20%)" score={metrics?.score_value} />
+                  <ScoreBar label="리스크 (10%)" score={metrics?.score_risk} />
                   <Separator />
-                  <ScoreBar label="Total Score" score={metrics?.score_total} isTotal />
+                  <ScoreBar label="종합 점수" score={metrics?.score_total} isTotal />
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="risk">
-              <Card>
+              <Card className="border-0 shadow-md">
                 <CardContent className="pt-6">
                   <div className="space-y-3">
                     <RiskItem
-                      label="Beta"
+                      label="베타"
                       value={metrics?.beta?.toFixed(2) || '-'}
                       status={metrics?.beta && metrics.beta > 1.5 ? 'warning' : 'ok'}
-                      description="Market volatility relative to S&P 500"
+                      description="S&P 500 대비 시장 변동성"
                     />
                     <RiskItem
-                      label="Debt/Equity"
+                      label="부채비율 (D/E)"
                       value={metrics?.debt_to_equity?.toFixed(2) || '-'}
                       status={metrics?.debt_to_equity && metrics.debt_to_equity > 1 ? 'warning' : 'ok'}
-                      description="Financial leverage ratio"
+                      description="재무 레버리지 비율"
                     />
                     <RiskItem
-                      label="Current Ratio"
+                      label="유동비율"
                       value={metrics?.current_ratio?.toFixed(2) || '-'}
                       status={metrics?.current_ratio && metrics.current_ratio < 1 ? 'warning' : 'ok'}
-                      description="Short-term liquidity"
+                      description="단기 유동성 지표"
                     />
                     <RiskItem
-                      label="FCF"
-                      value={metrics?.fcf ? (metrics.fcf > 0 ? 'Positive' : 'Negative') : '-'}
+                      label="FCF (잉여현금흐름)"
+                      value={metrics?.fcf ? (metrics.fcf > 0 ? '양수' : '음수') : '-'}
                       status={metrics?.fcf && metrics.fcf < 0 ? 'warning' : 'ok'}
-                      description="Free cash flow status"
+                      description="잉여현금흐름 상태"
                     />
                   </div>
                 </CardContent>
@@ -303,23 +331,29 @@ export function StockDetail({
 
         {/* Sidebar - My Actions */}
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>My Position</CardTitle>
+          <Card className="border-0 shadow-md">
+            <CardHeader className="border-b border-slate-100">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Wallet className="h-4 w-4 text-blue-600" />
+                </div>
+                내 포지션
+              </CardTitle>
               <CardDescription>
-                {holding ? 'Update your holding' : 'Add this stock to your portfolio'}
+                {holding ? '보유 정보를 수정하세요' : '이 종목을 포트폴리오에 추가하세요'}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-5 space-y-4">
               {holding && holdingValue && (
-                <div className="p-3 bg-muted rounded-lg space-y-2">
+                <div className="p-4 bg-slate-50 rounded-xl space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Current Value</span>
-                    <span className="font-semibold">{formatCurrency(holdingValue)}</span>
+                    <span className="text-sm text-slate-500">평가금액</span>
+                    <span className="font-semibold text-slate-900">{formatCurrency(holdingValue)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Gain/Loss</span>
-                    <span className={holdingGainLoss && holdingGainLoss >= 0 ? 'text-green-600' : 'text-red-600'}>
+                    <span className="text-sm text-slate-500">수익/손실</span>
+                    <span className={`font-semibold flex items-center gap-1 ${holdingGainLoss && holdingGainLoss >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                      {holdingGainLoss && holdingGainLoss >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
                       {formatCurrency(holdingGainLoss)} ({formatPercent(holdingGainLossPercent)})
                     </span>
                   </div>
@@ -327,31 +361,33 @@ export function StockDetail({
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Quantity</label>
+                <label className="text-sm font-semibold text-slate-700">보유 수량</label>
                 <Input
                   type="number"
-                  placeholder="e.g., 100"
+                  placeholder="예: 100"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
+                  className="h-11"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Average Price</label>
+                <label className="text-sm font-semibold text-slate-700">평균 매수가</label>
                 <Input
                   type="number"
-                  placeholder="e.g., 150.00"
+                  placeholder="예: 150.00"
                   value={avgPrice}
                   onChange={(e) => setAvgPrice(e.target.value)}
+                  className="h-11"
                 />
               </div>
 
-              <div className="flex gap-2">
-                <Button onClick={saveHolding} disabled={isSaving} className="flex-1">
+              <div className="flex gap-2 pt-2">
+                <Button onClick={saveHolding} disabled={isSaving} className="flex-1 bg-blue-600 hover:bg-blue-700 h-11">
                   <Plus className="h-4 w-4 mr-2" />
-                  {holding ? 'Update' : 'Add'} Position
+                  {holding ? '수정하기' : '추가하기'}
                 </Button>
                 {holding && (
-                  <Button variant="destructive" size="icon" onClick={removeHolding}>
+                  <Button variant="outline" size="icon" onClick={removeHolding} className="h-11 w-11 border-red-200 text-red-500 hover:bg-red-50">
                     <Minus className="h-4 w-4" />
                   </Button>
                 )}
@@ -366,30 +402,39 @@ export function StockDetail({
 
 function MetricRow({ label, value }: { label: string; value: string | undefined }) {
   return (
-    <div className="flex justify-between">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="font-medium">{value || '-'}</span>
+    <div className="flex justify-between py-2 border-b border-slate-100 last:border-0">
+      <span className="text-sm text-slate-500">{label}</span>
+      <span className="font-semibold text-slate-900">{value || '-'}</span>
     </div>
   );
 }
 
 function ScoreBar({ label, score, isTotal }: { label: string; score: number | null | undefined; isTotal?: boolean }) {
   const getColor = () => {
-    if (!score) return 'bg-muted';
+    if (!score) return 'bg-slate-200';
     if (score >= 70) return 'bg-green-500';
     if (score >= 50) return 'bg-yellow-500';
     return 'bg-red-500';
   };
 
+  const getTextColor = () => {
+    if (!score) return 'text-slate-400';
+    if (score >= 70) return 'text-green-600';
+    if (score >= 50) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
   return (
-    <div className="space-y-1">
+    <div className={`space-y-2 ${isTotal ? 'pt-2' : ''}`}>
       <div className="flex justify-between text-sm">
-        <span className={isTotal ? 'font-semibold' : ''}>{label}</span>
-        <span className={isTotal ? 'font-bold' : 'font-medium'}>{score?.toFixed(0) || '-'}/100</span>
+        <span className={`${isTotal ? 'font-bold text-slate-900' : 'text-slate-600'}`}>{label}</span>
+        <span className={`${isTotal ? 'font-bold text-lg' : 'font-semibold'} ${getTextColor()}`}>
+          {score?.toFixed(0) || '-'}점
+        </span>
       </div>
-      <div className="h-2 bg-muted rounded-full overflow-hidden">
+      <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
         <div
-          className={`h-full transition-all ${getColor()}`}
+          className={`h-full transition-all duration-500 ${getColor()}`}
           style={{ width: `${score || 0}%` }}
         />
       </div>
@@ -409,17 +454,17 @@ function RiskItem({
   description: string;
 }) {
   return (
-    <div className="flex items-center justify-between p-3 border rounded-lg">
+    <div className={`flex items-center justify-between p-4 rounded-xl ${status === 'warning' ? 'bg-yellow-50 border border-yellow-200' : 'bg-green-50 border border-green-200'}`}>
       <div>
-        <p className="font-medium">{label}</p>
-        <p className="text-xs text-muted-foreground">{description}</p>
+        <p className="font-semibold text-slate-900">{label}</p>
+        <p className="text-xs text-slate-500 mt-0.5">{description}</p>
       </div>
       <div className="text-right">
-        <p className={`font-semibold ${status === 'warning' ? 'text-yellow-600' : 'text-green-600'}`}>
+        <p className={`font-bold text-lg ${status === 'warning' ? 'text-yellow-600' : 'text-green-600'}`}>
           {value}
         </p>
-        <Badge variant={status === 'warning' ? 'warning' : 'success'} className="text-xs">
-          {status === 'warning' ? 'Watch' : 'OK'}
+        <Badge className={`text-xs ${status === 'warning' ? 'bg-yellow-100 text-yellow-700 border-0' : 'bg-green-100 text-green-700 border-0'}`}>
+          {status === 'warning' ? '주의' : '양호'}
         </Badge>
       </div>
     </div>

@@ -13,11 +13,11 @@ interface AppShellProps {
 
 export function AppShell({ children, user, isAdmin }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-50">
       <Sidebar isAdmin={isAdmin} />
-      <div className="pl-64">
+      <div className="pl-72">
         <Header user={user} />
-        <main className="p-6">{children}</main>
+        <main className="p-8">{children}</main>
       </div>
     </div>
   );

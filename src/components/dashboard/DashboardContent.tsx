@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, TrendingUp, AlertTriangle, Briefcase, Star } from 'lucide-react';
+import { ArrowRight, TrendingUp, TrendingDown, AlertTriangle, Briefcase, Star, Target, Zap } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { formatCurrency, formatPercent, formatLargeNumber, formatRelativeTime } from '@/lib/utils';
+import { formatCurrency, formatPercent, formatLargeNumber } from '@/lib/utils';
 
 interface DashboardContentProps {
   alertCandidates: any[];
@@ -42,85 +42,104 @@ export function DashboardContent({
     .slice(0, 5);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Your daily investment summary</p>
+        <h1 className="text-3xl font-bold text-slate-900">대시보드</h1>
+        <p className="text-slate-500 mt-1">오늘의 투자 현황을 한눈에 확인하세요</p>
       </div>
 
       {/* Quick stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Portfolio Value</CardTitle>
-            <Briefcase className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatLargeNumber(totalValue)}</div>
-            <p className={`text-xs ${totalGainLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {formatPercent(totalGainLossPercent)} all time
-            </p>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-0 shadow-md bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">포트폴리오 가치</p>
+                <p className="text-3xl font-bold mt-2">{formatLargeNumber(totalValue)}</p>
+                <div className={`flex items-center gap-1 mt-2 ${totalGainLoss >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                  {totalGainLoss >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                  <span className="text-sm font-medium">{formatPercent(totalGainLossPercent)}</span>
+                </div>
+              </div>
+              <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
+                <Briefcase className="h-7 w-7" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Watchlist</CardTitle>
-            <Star className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{watchlistCount}</div>
-            <p className="text-xs text-muted-foreground">stocks tracked</p>
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm font-medium">관심 종목</p>
+                <p className="text-3xl font-bold text-slate-900 mt-2">{watchlistCount}</p>
+                <p className="text-sm text-slate-400 mt-2">종목 추적 중</p>
+              </div>
+              <div className="w-14 h-14 bg-yellow-100 rounded-2xl flex items-center justify-center">
+                <Star className="h-7 w-7 text-yellow-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Alert Candidates</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{alertCandidates.length}</div>
-            <p className="text-xs text-muted-foreground">matching your criteria</p>
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm font-medium">알림 후보</p>
+                <p className="text-3xl font-bold text-slate-900 mt-2">{alertCandidates.length}</p>
+                <p className="text-sm text-slate-400 mt-2">조건 충족 종목</p>
+              </div>
+              <div className="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center">
+                <AlertTriangle className="h-7 w-7 text-orange-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Holdings</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{holdings.length}</div>
-            <p className="text-xs text-muted-foreground">stocks in portfolio</p>
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm font-medium">보유 종목</p>
+                <p className="text-3xl font-bold text-slate-900 mt-2">{holdings.length}</p>
+                <p className="text-sm text-slate-400 mt-2">포트폴리오 구성</p>
+              </div>
+              <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center">
+                <TrendingUp className="h-7 w-7 text-green-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Alert candidates */}
-        <Card>
-          <CardHeader>
+        <Card className="border-0 shadow-md">
+          <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Alert Candidates</CardTitle>
-                <CardDescription>Stocks matching your alert criteria</CardDescription>
+                <CardTitle className="text-xl text-slate-900">알림 후보 종목</CardTitle>
+                <CardDescription className="mt-1">설정한 조건을 충족하는 종목들</CardDescription>
               </div>
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant="ghost" size="sm" asChild className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
                 <Link href="/screener">
-                  View all <ArrowRight className="ml-2 h-4 w-4" />
+                  전체 보기 <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             {alertCandidates.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">
-                <AlertTriangle className="mx-auto h-8 w-8 mb-2 opacity-50" />
-                <p>No stocks match your criteria yet.</p>
-                <Button variant="link" asChild className="mt-2">
-                  <Link href="/settings">Adjust alert settings</Link>
+              <div className="text-center py-10">
+                <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Target className="h-8 w-8 text-slate-400" />
+                </div>
+                <p className="text-slate-500 mb-2">조건에 맞는 종목이 없습니다</p>
+                <Button variant="link" asChild className="text-blue-600">
+                  <Link href="/settings">알림 조건 설정하기</Link>
                 </Button>
               </div>
             ) : (
@@ -129,28 +148,36 @@ export function DashboardContent({
                   const drawdown = stock.week52_high
                     ? ((stock.week52_high - stock.price) / stock.week52_high) * 100
                     : 0;
+                  const scoreColor = stock.score_total >= 70 ? 'bg-green-100 text-green-700' :
+                    stock.score_total >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700';
 
                   return (
                     <Link
                       key={stock.symbol}
                       href={`/stocks/${stock.symbol}`}
-                      className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors"
+                      className="flex items-center justify-between rounded-xl border border-slate-100 p-4 hover:bg-slate-50 hover:border-slate-200 transition-all"
                     >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">{stock.symbol}</span>
-                          <Badge variant="outline" className="text-xs">
-                            Score: {stock.score_total?.toFixed(0)}
-                          </Badge>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center font-bold text-slate-700">
+                          {stock.symbol.slice(0, 2)}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {stock.tickers?.name}
-                        </p>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-slate-900">{stock.symbol}</span>
+                            <Badge className={`${scoreColor} border-0`}>
+                              {stock.score_total?.toFixed(0)}점
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-slate-500 mt-0.5">
+                            {stock.tickers?.name || stock.symbol}
+                          </p>
+                        </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">{formatCurrency(stock.price)}</p>
-                        <p className="text-xs text-red-600">
-                          -{drawdown.toFixed(1)}% from 52w high
+                        <p className="font-semibold text-slate-900">{formatCurrency(stock.price)}</p>
+                        <p className="text-sm text-red-500 flex items-center justify-end gap-1">
+                          <TrendingDown className="h-3 w-3" />
+                          고점 대비 -{drawdown.toFixed(1)}%
                         </p>
                       </div>
                     </Link>
@@ -162,61 +189,71 @@ export function DashboardContent({
         </Card>
 
         {/* Portfolio summary */}
-        <Card>
-          <CardHeader>
+        <Card className="border-0 shadow-md">
+          <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Portfolio Summary</CardTitle>
-                <CardDescription>Your top holdings by value</CardDescription>
+                <CardTitle className="text-xl text-slate-900">포트폴리오 현황</CardTitle>
+                <CardDescription className="mt-1">보유 비중 상위 종목</CardDescription>
               </div>
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant="ghost" size="sm" asChild className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
                 <Link href="/portfolio">
-                  Manage <ArrowRight className="ml-2 h-4 w-4" />
+                  관리하기 <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             {topHoldings.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">
-                <Briefcase className="mx-auto h-8 w-8 mb-2 opacity-50" />
-                <p>No holdings yet.</p>
-                <Button variant="link" asChild className="mt-2">
-                  <Link href="/portfolio">Add your portfolio</Link>
+              <div className="text-center py-10">
+                <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Briefcase className="h-8 w-8 text-slate-400" />
+                </div>
+                <p className="text-slate-500 mb-2">아직 보유 종목이 없습니다</p>
+                <Button variant="link" asChild className="text-blue-600">
+                  <Link href="/portfolio">포트폴리오 추가하기</Link>
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {topHoldings.map((holding) => {
-                  const weight = (holding.currentValue / totalValue) * 100;
+                  const weight = totalValue > 0 ? (holding.currentValue / totalValue) * 100 : 0;
                   const gainLoss = (holding.metrics_latest?.price || 0) - holding.avg_price;
-                  const gainLossPercent = (gainLoss / holding.avg_price) * 100;
+                  const gainLossPercent = holding.avg_price > 0 ? (gainLoss / holding.avg_price) * 100 : 0;
 
                   return (
                     <div key={holding.symbol} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <Link
-                            href={`/stocks/${holding.symbol}`}
-                            className="font-medium hover:underline"
-                          >
-                            {holding.symbol}
-                          </Link>
-                          <span className="ml-2 text-sm text-muted-foreground">
-                            {holding.quantity} shares
-                          </span>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center font-semibold text-blue-700 text-sm">
+                            {holding.symbol.slice(0, 2)}
+                          </div>
+                          <div>
+                            <Link
+                              href={`/stocks/${holding.symbol}`}
+                              className="font-semibold text-slate-900 hover:text-blue-600 transition-colors"
+                            >
+                              {holding.symbol}
+                            </Link>
+                            <p className="text-sm text-slate-500">
+                              {holding.quantity}주 보유
+                            </p>
+                          </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium">{formatLargeNumber(holding.currentValue)}</p>
-                          <p className={`text-xs ${gainLossPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          <p className="font-semibold text-slate-900">{formatLargeNumber(holding.currentValue)}</p>
+                          <p className={`text-sm flex items-center justify-end gap-1 ${gainLossPercent >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                            {gainLossPercent >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                             {formatPercent(gainLossPercent)}
                           </p>
                         </div>
                       </div>
-                      <Progress value={weight} className="h-2" />
-                      <p className="text-xs text-muted-foreground">
-                        {weight.toFixed(1)}% of portfolio
-                      </p>
+                      <div className="space-y-1">
+                        <Progress value={weight} className="h-2" />
+                        <p className="text-xs text-slate-400">
+                          포트폴리오의 {weight.toFixed(1)}%
+                        </p>
+                      </div>
                     </div>
                   );
                 })}
@@ -227,21 +264,29 @@ export function DashboardContent({
       </div>
 
       {/* Quick actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-            <Button asChild>
-              <Link href="/screener">Open Screener</Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/portfolio">Upload Portfolio</Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/settings">Alert Settings</Link>
-            </Button>
+      <Card className="border-0 shadow-md bg-gradient-to-r from-slate-900 to-slate-800">
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                <Zap className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">빠른 실행</h3>
+                <p className="text-slate-400 text-sm">자주 사용하는 기능에 빠르게 접근하세요</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild className="bg-blue-600 hover:bg-blue-700">
+                <Link href="/screener">스크리너 열기</Link>
+              </Button>
+              <Button variant="outline" asChild className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white">
+                <Link href="/portfolio">포트폴리오 관리</Link>
+              </Button>
+              <Button variant="outline" asChild className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white">
+                <Link href="/settings">알림 설정</Link>
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
