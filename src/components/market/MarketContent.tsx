@@ -67,6 +67,13 @@ interface MarketData {
   commodities: Commodity[];
   fearGreed: { value: number; label: string };
   lastUpdate: string;
+  source?: string;
+}
+
+interface ApiResponse {
+  success: boolean;
+  connected: boolean;
+  data: MarketData;
 }
 
 export function MarketContent({
@@ -78,6 +85,7 @@ export function MarketContent({
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [marketData, setMarketData] = useState<MarketData | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
 
   const fetchMarketData = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -85,12 +93,14 @@ export function MarketContent({
 
     try {
       const response = await fetch('/api/market/data');
-      const result = await response.json();
+      const result: ApiResponse = await response.json();
       if (result.success) {
         setMarketData(result.data);
+        setIsConnected(result.connected);
       }
     } catch (error) {
       console.error('Failed to fetch market data:', error);
+      setIsConnected(false);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -124,9 +134,22 @@ export function MarketContent({
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">시장 현황</h1>
           <p className="text-slate-500 mt-1">미국 시장 전체 상황을 한눈에 확인하세요</p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-slate-500">
-          <Clock className="h-4 w-4" />
-          <span>업데이트: {mounted && lastUpdate ? lastUpdate.toLocaleTimeString('ko-KR') : '--:--:--'}</span>
+        <div className="flex items-center gap-3 text-sm text-slate-500">
+          {/* API 연결 상태 */}
+          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg ${
+            isConnected
+              ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+              : 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-yellow-500'} ${isConnected ? '' : 'animate-pulse'}`} />
+            <span className="text-xs font-medium">
+              {isConnected ? (marketData?.source || 'Live') : 'API 미연결'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            <span>업데이트: {mounted && lastUpdate ? lastUpdate.toLocaleTimeString('ko-KR') : '--:--:--'}</span>
+          </div>
           <Button
             variant="ghost"
             size="icon"
@@ -219,31 +242,50 @@ export function MarketContent({
               데이터를 불러올 수 없습니다
             </div>
           ) : (
-            marketIndices.map((index) => (
-              <Card key={index.symbol} className="border-0 shadow-md hover:shadow-lg transition-shadow dark:bg-slate-800">
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">{index.name}</p>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-                        {index.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </p>
+            marketIndices.map((index) => {
+              const hasData = index.price > 0;
+              return (
+                <Card key={index.symbol} className="border-0 shadow-md hover:shadow-lg transition-shadow dark:bg-slate-800">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{index.name}</p>
+                        <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                          {hasData
+                            ? index.price.toLocaleString('en-US', { minimumFractionDigits: 2 })
+                            : '--'
+                          }
+                        </p>
+                      </div>
+                      {hasData ? (
+                        <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
+                          index.changePercent >= 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400'
+                        }`}>
+                          {index.changePercent >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                          <span className="font-semibold text-sm">
+                            {index.changePercent >= 0 ? '+' : ''}{index.changePercent.toFixed(2)}%
+                          </span>
+                        </div>
+                      ) : (
+                        <Badge className="bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400 border-0">
+                          대기중
+                        </Badge>
+                      )}
                     </div>
-                    <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
-                      index.changePercent >= 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400'
+                    <p className={`text-sm mt-2 ${
+                      hasData
+                        ? index.change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'
+                        : 'text-slate-400'
                     }`}>
-                      {index.changePercent >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                      <span className="font-semibold text-sm">
-                        {index.changePercent >= 0 ? '+' : ''}{index.changePercent.toFixed(2)}%
-                      </span>
-                    </div>
-                  </div>
-                  <p className={`text-sm mt-2 ${index.change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
-                    {index.change >= 0 ? '+' : ''}{index.change.toFixed(2)} 포인트
-                  </p>
-                </CardContent>
-              </Card>
-            ))
+                      {hasData
+                        ? `${index.change >= 0 ? '+' : ''}${index.change.toFixed(2)} 포인트`
+                        : 'API 키 설정 필요'
+                      }
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
       </div>
