@@ -56,7 +56,7 @@ export function Header({ user }: HeaderProps) {
         />
       </form>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 ml-auto">
         {/* Theme Toggle */}
         <Button
           variant="ghost"

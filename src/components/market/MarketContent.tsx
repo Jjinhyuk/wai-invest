@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   TrendingUp,
@@ -17,6 +17,7 @@ import {
   Flame,
   Target,
   Shield,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,45 +36,85 @@ interface MarketContentProps {
   drawdownOpportunities: any[];
 }
 
-// Mock market data - in production, fetch from FMP API
-const marketIndices = [
-  { symbol: 'SPY', name: 'S&P 500', price: 5998.74, change: 1.23, changePercent: 0.45 },
-  { symbol: 'QQQ', name: 'NASDAQ', price: 21234.56, change: -45.67, changePercent: -0.21 },
-  { symbol: 'DIA', name: 'DOW 30', price: 44642.15, change: 125.43, changePercent: 0.28 },
-  { symbol: 'IWM', name: 'Russell 2000', price: 2342.87, change: 18.34, changePercent: 0.79 },
-];
+interface MarketIndex {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  changePercent: number;
+}
 
-const marketIndicators = [
-  { symbol: 'VIX', name: '공포지수', value: 13.45, status: 'low' as const },
-  { symbol: 'DXY', name: '달러 인덱스', value: 106.82, change: 0.15 },
-  { symbol: 'TNX', name: '미국 10년물', value: 4.23, unit: '%' },
-  { symbol: 'USDKRW', name: '원/달러', value: 1385.50, change: -2.30 },
-];
+interface MarketIndicator {
+  symbol: string;
+  name: string;
+  value: number;
+  change?: number;
+  unit?: string;
+  status?: 'low' | 'high';
+}
 
-const commodities = [
-  { symbol: 'GC', name: '금', price: 2658.40, change: 12.30, changePercent: 0.46 },
-  { symbol: 'CL', name: '원유(WTI)', price: 71.24, change: -0.87, changePercent: -1.21 },
-  { symbol: 'BTC', name: '비트코인', price: 101234, change: 2345, changePercent: 2.37 },
-];
+interface Commodity {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  changePercent: number;
+}
+
+interface MarketData {
+  indices: MarketIndex[];
+  indicators: MarketIndicator[];
+  commodities: Commodity[];
+  fearGreed: { value: number; label: string };
+  lastUpdate: string;
+}
 
 export function MarketContent({
   sectorPerformance,
   topScorers,
   drawdownOpportunities,
 }: MarketContentProps) {
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [marketData, setMarketData] = useState<MarketData | null>(null);
+
+  const fetchMarketData = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+
+    try {
+      const response = await fetch('/api/market/data');
+      const result = await response.json();
+      if (result.success) {
+        setMarketData(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch market data:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     setMounted(true);
-    setLastUpdate(new Date());
-  }, []);
+    fetchMarketData();
+  }, [fetchMarketData]);
 
-  // Fear & Greed calculation (simplified)
-  const vix = marketIndicators.find(i => i.symbol === 'VIX')?.value || 20;
-  const fearGreedScore = Math.max(0, Math.min(100, 100 - (vix - 10) * 3));
-  const fearGreedLabel = fearGreedScore >= 70 ? '탐욕' : fearGreedScore >= 50 ? '중립' : fearGreedScore >= 30 ? '두려움' : '극단적 두려움';
+  const handleRefresh = () => {
+    fetchMarketData(true);
+  };
+
+  // Use fetched data or defaults
+  const marketIndices = marketData?.indices || [];
+  const marketIndicators = marketData?.indicators || [];
+  const commodities = marketData?.commodities || [];
+  const fearGreedScore = marketData?.fearGreed?.value || 50;
+  const fearGreedLabel = marketData?.fearGreed?.label || '중립';
+  const lastUpdate = marketData?.lastUpdate ? new Date(marketData.lastUpdate) : null;
   const fearGreedColor = fearGreedScore >= 70 ? 'text-green-600' : fearGreedScore >= 50 ? 'text-yellow-600' : 'text-red-600';
+  const vix = marketIndicators.find(i => i.symbol === 'VIX')?.value || 15;
 
   return (
     <div className="space-y-8">
@@ -86,8 +127,18 @@ export function MarketContent({
         <div className="flex items-center gap-2 text-sm text-slate-500">
           <Clock className="h-4 w-4" />
           <span>업데이트: {mounted && lastUpdate ? lastUpdate.toLocaleTimeString('ko-KR') : '--:--:--'}</span>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setLastUpdate(new Date())}>
-            <RefreshCw className="h-4 w-4" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>
@@ -154,43 +205,53 @@ export function MarketContent({
 
       {/* Main Indices */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-blue-600" />
           주요 지수
         </h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {marketIndices.map((index) => (
-            <Card key={index.symbol} className="border-0 shadow-md hover:shadow-lg transition-shadow">
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm text-slate-500">{index.name}</p>
-                    <p className="text-2xl font-bold text-slate-900 mt-1">
-                      {index.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </p>
+          {loading ? (
+            <div className="col-span-4 flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            </div>
+          ) : marketIndices.length === 0 ? (
+            <div className="col-span-4 text-center py-8 text-slate-500">
+              데이터를 불러올 수 없습니다
+            </div>
+          ) : (
+            marketIndices.map((index) => (
+              <Card key={index.symbol} className="border-0 shadow-md hover:shadow-lg transition-shadow dark:bg-slate-800">
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{index.name}</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                        {index.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
+                      index.changePercent >= 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400'
+                    }`}>
+                      {index.changePercent >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+                      <span className="font-semibold text-sm">
+                        {index.changePercent >= 0 ? '+' : ''}{index.changePercent.toFixed(2)}%
+                      </span>
+                    </div>
                   </div>
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
-                    index.changePercent >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
-                  }`}>
-                    {index.changePercent >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                    <span className="font-semibold text-sm">
-                      {index.changePercent >= 0 ? '+' : ''}{index.changePercent.toFixed(2)}%
-                    </span>
-                  </div>
-                </div>
-                <p className={`text-sm mt-2 ${index.change >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  {index.change >= 0 ? '+' : ''}{index.change.toFixed(2)} 포인트
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+                  <p className={`text-sm mt-2 ${index.change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
+                    {index.change >= 0 ? '+' : ''}{index.change.toFixed(2)} 포인트
+                  </p>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
       </div>
 
       {/* Market Indicators & Commodities */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Indicators */}
-        <Card className="border-0 shadow-md">
+        <Card className="border-0 shadow-md dark:bg-slate-800">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg flex items-center gap-2">
               <Globe className="h-5 w-5 text-purple-600" />
@@ -200,35 +261,35 @@ export function MarketContent({
           <CardContent>
             <div className="space-y-4">
               {marketIndicators.map((indicator) => (
-                <div key={indicator.symbol} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                <div key={indicator.symbol} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                       indicator.symbol === 'VIX'
-                        ? indicator.status === 'low' ? 'bg-green-100' : 'bg-red-100'
-                        : 'bg-slate-200'
+                        ? indicator.status === 'low' ? 'bg-green-100 dark:bg-green-900/50' : 'bg-red-100 dark:bg-red-900/50'
+                        : 'bg-slate-200 dark:bg-slate-600'
                     }`}>
                       {indicator.symbol === 'VIX' ? (
-                        <AlertTriangle className={`h-5 w-5 ${indicator.status === 'low' ? 'text-green-600' : 'text-red-600'}`} />
+                        <AlertTriangle className={`h-5 w-5 ${indicator.status === 'low' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
                       ) : (
-                        <DollarSign className="h-5 w-5 text-slate-600" />
+                        <DollarSign className="h-5 w-5 text-slate-600 dark:text-slate-300" />
                       )}
                     </div>
                     <div>
-                      <p className="font-medium text-slate-900">{indicator.name}</p>
-                      <p className="text-xs text-slate-500">{indicator.symbol}</p>
+                      <p className="font-medium text-slate-900 dark:text-white">{indicator.name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{indicator.symbol}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-slate-900">
+                    <p className="font-bold text-slate-900 dark:text-white">
                       {indicator.value.toLocaleString()}{indicator.unit || ''}
                     </p>
                     {indicator.change !== undefined && (
-                      <p className={`text-sm ${indicator.change >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                      <p className={`text-sm ${indicator.change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
                         {indicator.change >= 0 ? '+' : ''}{indicator.change.toFixed(2)}
                       </p>
                     )}
                     {indicator.symbol === 'VIX' && (
-                      <Badge className={`text-xs ${indicator.status === 'low' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'} border-0`}>
+                      <Badge className={`text-xs ${indicator.status === 'low' ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400'} border-0`}>
                         {indicator.status === 'low' ? '안정' : '불안'}
                       </Badge>
                     )}
@@ -240,7 +301,7 @@ export function MarketContent({
         </Card>
 
         {/* Commodities */}
-        <Card className="border-0 shadow-md">
+        <Card className="border-0 shadow-md dark:bg-slate-800">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg flex items-center gap-2">
               <Zap className="h-5 w-5 text-yellow-600" />
@@ -250,27 +311,27 @@ export function MarketContent({
           <CardContent>
             <div className="space-y-4">
               {commodities.map((commodity) => (
-                <div key={commodity.symbol} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                <div key={commodity.symbol} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg flex items-center justify-center">
                       {commodity.symbol === 'BTC' ? (
-                        <span className="text-yellow-600 font-bold">₿</span>
+                        <span className="text-yellow-600 dark:text-yellow-400 font-bold">₿</span>
                       ) : commodity.symbol === 'GC' ? (
-                        <span className="text-yellow-600 font-bold">Au</span>
+                        <span className="text-yellow-600 dark:text-yellow-400 font-bold">Au</span>
                       ) : (
                         <span className="text-yellow-600 font-bold">🛢️</span>
                       )}
                     </div>
                     <div>
-                      <p className="font-medium text-slate-900">{commodity.name}</p>
-                      <p className="text-xs text-slate-500">{commodity.symbol}</p>
+                      <p className="font-medium text-slate-900 dark:text-white">{commodity.name}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{commodity.symbol}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-slate-900">
+                    <p className="font-bold text-slate-900 dark:text-white">
                       ${commodity.price.toLocaleString()}
                     </p>
-                    <p className={`text-sm flex items-center justify-end gap-1 ${commodity.changePercent >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                    <p className={`text-sm flex items-center justify-end gap-1 ${commodity.changePercent >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
                       {commodity.changePercent >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                       {commodity.changePercent >= 0 ? '+' : ''}{commodity.changePercent.toFixed(2)}%
                     </p>

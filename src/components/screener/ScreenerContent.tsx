@@ -144,9 +144,9 @@ export function ScreenerContent({
     <div className="space-y-8">
       {/* Page header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">스크리너</h1>
-        <p className="text-slate-500 mt-1">
-          총 <span className="font-semibold text-slate-700">{totalCount}</span>개 종목 분석 가능
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">스크리너</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">
+          총 <span className="font-semibold text-slate-700 dark:text-slate-300">{totalCount}</span>개 종목 분석 가능
         </p>
       </div>
 
@@ -164,17 +164,17 @@ export function ScreenerContent({
               }}
               className={`relative p-5 rounded-2xl border-2 text-left transition-all ${
                 isActive
-                  ? 'border-blue-500 bg-blue-50 shadow-md'
-                  : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-md'
+                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm'
               }`}
             >
               <div className={`w-10 h-10 ${preset.color} rounded-xl flex items-center justify-center mb-3`}>
                 <preset.icon className="w-5 h-5 text-white" />
               </div>
-              <h3 className={`font-semibold ${isActive ? 'text-blue-900' : 'text-slate-900'}`}>
+              <h3 className={`font-semibold ${isActive ? 'text-blue-900 dark:text-blue-300' : 'text-slate-900 dark:text-white'}`}>
                 {preset.label}
               </h3>
-              <p className={`text-sm mt-1 ${isActive ? 'text-blue-600' : 'text-slate-500'}`}>
+              <p className={`text-sm mt-1 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'}`}>
                 {preset.description}
               </p>
               {isActive && (
@@ -193,7 +193,7 @@ export function ScreenerContent({
 
       {/* Active preset filter conditions */}
       {activePreset && (
-        <Card className="border-0 shadow-sm bg-gradient-to-r from-slate-50 to-white">
+        <Card className="border-0 shadow-sm bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-800">
           <CardContent className="p-5">
             <div className="flex items-start gap-4">
               <div className={`w-10 h-10 ${presets.find(p => p.id === activePreset)?.color} rounded-xl flex items-center justify-center shrink-0`}>
@@ -204,7 +204,7 @@ export function ScreenerContent({
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-slate-900">
+                  <h4 className="font-semibold text-slate-900 dark:text-white">
                     {presets.find(p => p.id === activePreset)?.label} 전략 필터 조건
                   </h4>
                   <Badge className="bg-blue-100 text-blue-700 border-0">
@@ -246,7 +246,7 @@ export function ScreenerContent({
           <Input
             type="search"
             placeholder="종목 검색 (심볼 또는 회사명)..."
-            className="pl-11 h-12 bg-white border-slate-200 rounded-xl"
+            className="pl-11 h-12 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl dark:text-white"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -258,8 +258,8 @@ export function ScreenerContent({
       </div>
 
       {/* Results */}
-      <Card className="border-0 shadow-md overflow-hidden">
-        <CardHeader className="bg-slate-50 border-b border-slate-100">
+      <Card className="border-0 shadow-md overflow-hidden dark:bg-slate-800">
+        <CardHeader className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-700">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg">검색 결과</CardTitle>
@@ -281,42 +281,42 @@ export function ScreenerContent({
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50">
-                    <th className="py-4 px-6 text-left text-sm font-semibold text-slate-600">종목</th>
-                    <th className="py-4 px-4 text-left text-sm font-semibold text-slate-600">
+                  <tr className="border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-slate-600 dark:text-slate-300">종목</th>
+                    <th className="py-4 px-4 text-left text-sm font-semibold text-slate-600 dark:text-slate-300">
                       <button
                         onClick={() => toggleSort('score_total')}
-                        className="flex items-center gap-1 hover:text-slate-900 transition-colors"
+                        className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-white transition-colors"
                       >
                         종합 점수 <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </th>
-                    <th className="py-4 px-4 text-left text-sm font-semibold text-slate-600">현재가</th>
-                    <th className="py-4 px-4 text-left text-sm font-semibold text-slate-600">
+                    <th className="py-4 px-4 text-left text-sm font-semibold text-slate-600 dark:text-slate-300">현재가</th>
+                    <th className="py-4 px-4 text-left text-sm font-semibold text-slate-600 dark:text-slate-300">
                       <button
                         onClick={() => toggleSort('drawdown')}
-                        className="flex items-center gap-1 hover:text-slate-900 transition-colors"
+                        className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-white transition-colors"
                       >
                         고점 대비 <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </th>
-                    <th className="py-4 px-4 text-left text-sm font-semibold text-slate-600">
+                    <th className="py-4 px-4 text-left text-sm font-semibold text-slate-600 dark:text-slate-300">
                       <button
                         onClick={() => toggleSort('peg')}
-                        className="flex items-center gap-1 hover:text-slate-900 transition-colors"
+                        className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-white transition-colors"
                       >
                         PEG <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </th>
-                    <th className="py-4 px-4 text-left text-sm font-semibold text-slate-600">
+                    <th className="py-4 px-4 text-left text-sm font-semibold text-slate-600 dark:text-slate-300">
                       <button
                         onClick={() => toggleSort('market_cap')}
-                        className="flex items-center gap-1 hover:text-slate-900 transition-colors"
+                        className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-white transition-colors"
                       >
                         시가총액 <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </th>
-                    <th className="py-4 px-4 text-left text-sm font-semibold text-slate-600">분석 요약</th>
+                    <th className="py-4 px-4 text-left text-sm font-semibold text-slate-600 dark:text-slate-300">분석 요약</th>
                     <th className="py-4 px-4"></th>
                   </tr>
                 </thead>
@@ -326,8 +326,8 @@ export function ScreenerContent({
                     return (
                       <tr
                         key={stock.symbol}
-                        className={`border-b border-slate-50 hover:bg-blue-50/50 transition-colors ${
-                          index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
+                        className={`border-b border-slate-50 dark:border-slate-700 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors ${
+                          index % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50/30 dark:bg-slate-700/30'
                         }`}
                       >
                         <td className="py-4 px-6">
@@ -335,15 +335,15 @@ export function ScreenerContent({
                             href={`/stocks/${stock.symbol}`}
                             className="flex items-center gap-3 group"
                           >
-                            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center font-bold text-slate-700 group-hover:bg-blue-100 group-hover:text-blue-700 transition-colors">
+                            <div className="w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center font-bold text-slate-700 dark:text-slate-300 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
                               {stock.symbol.slice(0, 2)}
                             </div>
                             <div>
-                              <span className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-1">
+                              <span className="font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors flex items-center gap-1">
                                 {stock.symbol}
                                 <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                               </span>
-                              <p className="text-xs text-slate-500 truncate max-w-[120px]">
+                              <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[120px]">
                                 {stock.tickers?.name}
                               </p>
                             </div>
@@ -354,12 +354,12 @@ export function ScreenerContent({
                             {stock.score_total?.toFixed(0) || '-'}점
                           </Badge>
                         </td>
-                        <td className="py-4 px-4 font-semibold text-slate-900">
+                        <td className="py-4 px-4 font-semibold text-slate-900 dark:text-white">
                           {formatCurrency(stock.price)}
                         </td>
                         <td className="py-4 px-4">
                           {stock.drawdown !== null ? (
-                            <span className="text-red-500 flex items-center gap-1">
+                            <span className="text-red-500 dark:text-red-400 flex items-center gap-1">
                               <TrendingDown className="w-3 h-3" />
                               -{stock.drawdown.toFixed(1)}%
                             </span>
@@ -367,14 +367,14 @@ export function ScreenerContent({
                             <span className="text-slate-400">-</span>
                           )}
                         </td>
-                        <td className="py-4 px-4 text-slate-700">
+                        <td className="py-4 px-4 text-slate-700 dark:text-slate-300">
                           {stock.peg?.toFixed(2) || '-'}
                         </td>
-                        <td className="py-4 px-4 text-slate-700">
+                        <td className="py-4 px-4 text-slate-700 dark:text-slate-300">
                           {formatMarketCap(stock.market_cap)}
                         </td>
                         <td className="py-4 px-4">
-                          <p className="text-xs text-slate-500 max-w-[180px] truncate">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[180px] truncate">
                             {stock.explain_text || '분석 데이터 없음'}
                           </p>
                         </td>
