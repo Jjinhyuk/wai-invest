@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Database, Download, RefreshCw, AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Database, Download, RefreshCw, AlertTriangle, CheckCircle, XCircle, Clock, Zap } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +27,8 @@ export function AdminDataContent({
   const [jobs, setJobs] = useState(initialJobs);
   const [isImporting, setIsImporting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
   const [importProgress, setImportProgress] = useState({ done: 0, total: 0 });
 
   const missingMetricsCount = tickerCount - metricsCount;
@@ -72,6 +74,33 @@ export function AdminDataContent({
       alert('Update failed');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleQuickSync = async (limit: number = 50) => {
+    setIsSyncing(true);
+    setSyncResult(null);
+    try {
+      const response = await fetch('/api/admin/stocks/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limit }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSyncResult(
+          `완료: ${data.tickersImported}개 종목 등록, ${data.metricsUpdated}개 지표 업데이트` +
+          (data.metricsFailed > 0 ? ` (${data.metricsFailed}개 실패)` : '')
+        );
+        setTimeout(() => window.location.reload(), 2000);
+      } else {
+        setSyncResult('동기화 실패: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Sync error:', error);
+      setSyncResult('동기화 중 오류 발생');
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -127,6 +156,56 @@ export function AdminDataContent({
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Sync - 빠른 동기화 */}
+      <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-blue-600" />
+            빠른 종목 동기화
+          </CardTitle>
+          <CardDescription>
+            S&P 500 대표 종목을 한 번에 가져옵니다 (Finnhub 무료 API 사용)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => handleQuickSync(30)}
+              disabled={isSyncing}
+              variant="outline"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              30개 종목
+            </Button>
+            <Button
+              onClick={() => handleQuickSync(50)}
+              disabled={isSyncing}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              50개 종목 (권장)
+            </Button>
+            <Button
+              onClick={() => handleQuickSync(100)}
+              disabled={isSyncing}
+              variant="outline"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              100개 종목
+            </Button>
+          </div>
+          {isSyncing && (
+            <p className="text-sm text-muted-foreground animate-pulse">
+              종목 데이터 동기화 중... (약 1-2분 소요)
+            </p>
+          )}
+          {syncResult && (
+            <p className={`text-sm ${syncResult.includes('실패') ? 'text-red-600' : 'text-green-600'}`}>
+              {syncResult}
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Actions */}
       <Card>

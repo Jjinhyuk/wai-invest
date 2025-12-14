@@ -4,6 +4,7 @@
  */
 
 import { finnhubProvider } from '../providers/finnhubProvider';
+import { twelveDataProvider } from '../providers/twelveDataProvider';
 import {
   IMarketDataProvider,
   MarketIndex,
@@ -22,8 +23,9 @@ class MarketDataService {
 
   constructor() {
     // Provider 등록 (우선순위 순)
-    this.providers = [finnhubProvider];
-    this.primaryProvider = finnhubProvider;
+    // Twelve Data를 기본으로, Finnhub를 fallback으로 사용
+    this.providers = [twelveDataProvider, finnhubProvider];
+    this.primaryProvider = twelveDataProvider;
   }
 
   /**
