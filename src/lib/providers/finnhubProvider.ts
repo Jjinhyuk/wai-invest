@@ -56,6 +56,7 @@ class FinnhubProvider implements IMarketDataProvider {
 
   private async fetch<T>(endpoint: string): Promise<T | null> {
     if (!this.apiKey) {
+      console.warn('Finnhub API key not configured');
       return null;
     }
 
@@ -74,7 +75,15 @@ class FinnhubProvider implements IMarketDataProvider {
         return null;
       }
 
-      return await response.json();
+      const data = await response.json();
+
+      // API 에러 응답 체크 (Invalid API key 등)
+      if (data && typeof data === 'object' && 'error' in data) {
+        console.error(`Finnhub API error: ${data.error}`);
+        return null;
+      }
+
+      return data;
     } catch (error) {
       console.error('Finnhub fetch error:', error);
       return null;

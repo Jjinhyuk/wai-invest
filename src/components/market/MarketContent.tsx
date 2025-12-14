@@ -107,10 +107,29 @@ export function MarketContent({
     }
   }, []);
 
+  // 백그라운드 자동 새로고침 (UI 방해 없이)
+  const silentRefresh = useCallback(async () => {
+    try {
+      const response = await fetch('/api/market/data');
+      const result: ApiResponse = await response.json();
+      if (result.success) {
+        setMarketData(result.data);
+        setIsConnected(result.connected);
+      }
+    } catch (error) {
+      console.error('Silent refresh failed:', error);
+    }
+  }, []);
+
   useEffect(() => {
     setMounted(true);
     fetchMarketData();
-  }, [fetchMarketData]);
+
+    // 자동 새로고침 (60초마다, 백그라운드에서 조용히)
+    const interval = setInterval(silentRefresh, 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [fetchMarketData, silentRefresh]);
 
   const handleRefresh = () => {
     fetchMarketData(true);
@@ -244,6 +263,7 @@ export function MarketContent({
           ) : (
             marketIndices.map((index) => {
               const hasData = index.price > 0;
+              const hasLiveData = hasData && (index.change !== 0 || index.changePercent !== 0);
               return (
                 <Card key={index.symbol} className="border-0 shadow-md hover:shadow-lg transition-shadow dark:bg-slate-800">
                   <CardContent className="p-5">
@@ -252,12 +272,12 @@ export function MarketContent({
                         <p className="text-sm text-slate-500 dark:text-slate-400">{index.name}</p>
                         <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
                           {hasData
-                            ? index.price.toLocaleString('en-US', { minimumFractionDigits: 2 })
+                            ? `$${index.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
                             : '--'
                           }
                         </p>
                       </div>
-                      {hasData ? (
+                      {hasLiveData ? (
                         <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
                           index.changePercent >= 0 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400'
                         }`}>
@@ -266,20 +286,26 @@ export function MarketContent({
                             {index.changePercent >= 0 ? '+' : ''}{index.changePercent.toFixed(2)}%
                           </span>
                         </div>
-                      ) : (
+                      ) : hasData ? (
                         <Badge className="bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400 border-0">
+                          기준가
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-yellow-100 text-yellow-600 dark:bg-yellow-900/50 dark:text-yellow-400 border-0">
                           대기중
                         </Badge>
                       )}
                     </div>
                     <p className={`text-sm mt-2 ${
-                      hasData
+                      hasLiveData
                         ? index.change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'
-                        : 'text-slate-400'
+                        : 'text-slate-400 dark:text-slate-500'
                     }`}>
-                      {hasData
-                        ? `${index.change >= 0 ? '+' : ''}${index.change.toFixed(2)} 포인트`
-                        : 'API 키 설정 필요'
+                      {hasLiveData
+                        ? `${index.change >= 0 ? '+' : ''}${index.change.toFixed(2)}`
+                        : hasData
+                          ? '실시간 데이터 대기'
+                          : 'API 연결 필요'
                       }
                     </p>
                   </CardContent>

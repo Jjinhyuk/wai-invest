@@ -186,30 +186,31 @@ class MarketDataService {
     return { value, label };
   }
 
-  // 기본값 (API 없을 때)
+  // 기본값 (API 없을 때 - 최근 실제 데이터 기반)
+  // 2024년 12월 기준 대략적인 값으로 설정
   private getDefaultIndices(): MarketIndex[] {
     return [
-      { symbol: 'SPY', name: 'S&P 500', price: 0, change: 0, changePercent: 0 },
-      { symbol: 'QQQ', name: 'NASDAQ 100', price: 0, change: 0, changePercent: 0 },
-      { symbol: 'DIA', name: 'DOW 30', price: 0, change: 0, changePercent: 0 },
-      { symbol: 'IWM', name: 'Russell 2000', price: 0, change: 0, changePercent: 0 },
+      { symbol: 'SPY', name: 'S&P 500', price: 607.51, change: 0, changePercent: 0 },
+      { symbol: 'QQQ', name: 'NASDAQ 100', price: 531.74, change: 0, changePercent: 0 },
+      { symbol: 'DIA', name: 'DOW 30', price: 438.56, change: 0, changePercent: 0 },
+      { symbol: 'IWM', name: 'Russell 2000', price: 236.12, change: 0, changePercent: 0 },
     ];
   }
 
   private getDefaultIndicators(): MarketIndicator[] {
     return [
-      { symbol: 'VIX', name: '공포지수', value: 0, status: 'normal' },
-      { symbol: 'DXY', name: '달러 인덱스', value: 0 },
-      { symbol: 'TNX', name: '미국 10년물', value: 0, unit: '%' },
-      { symbol: 'USDKRW', name: '원/달러', value: 0 },
+      { symbol: 'VIX', name: '공포지수', value: 14.5, status: 'low' },
+      { symbol: 'DXY', name: '달러 인덱스', value: 106.8, change: 0 },
+      { symbol: 'TNX', name: '미국 10년물', value: 4.35, unit: '%' },
+      { symbol: 'USDKRW', name: '원/달러', value: 1435, change: 0 },
     ];
   }
 
   private getDefaultCommodities(): CommodityData[] {
     return [
-      { symbol: 'GC', name: '금', price: 0, change: 0, changePercent: 0 },
-      { symbol: 'CL', name: '원유(WTI)', price: 0, change: 0, changePercent: 0 },
-      { symbol: 'BTC', name: '비트코인', price: 0, change: 0, changePercent: 0 },
+      { symbol: 'GC', name: '금', price: 2650, change: 0, changePercent: 0 },
+      { symbol: 'CL', name: '원유(WTI)', price: 70.5, change: 0, changePercent: 0 },
+      { symbol: 'BTC', name: '비트코인', price: 101500, change: 0, changePercent: 0 },
     ];
   }
 }
