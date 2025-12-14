@@ -272,7 +272,7 @@ export function MarketContent({
                         <p className="text-sm text-slate-500 dark:text-slate-400">{index.name}</p>
                         <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
                           {hasData
-                            ? `$${index.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+                            ? index.price.toLocaleString('en-US', { minimumFractionDigits: 2 })
                             : '--'
                           }
                         </p>

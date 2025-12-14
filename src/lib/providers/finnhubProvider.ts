@@ -96,11 +96,17 @@ class FinnhubProvider implements IMarketDataProvider {
     if (cached) return cached;
 
     // ETF를 통해 주요 지수 조회
+    // ETF 가격을 실제 지수로 변환하는 배수 적용
+    // 2024년 12월 기준 배수 (ETF 가격 → 실제 지수)
+    // SPY $607 → S&P 500 6,827 (약 11.25배)
+    // QQQ $531 → NASDAQ 23,195 (약 43.7배)
+    // DIA $438 → DOW 43,800 (약 100배)
+    // IWM $236 → Russell 2000 2,360 (약 10배)
     const indexSymbols = [
-      { symbol: 'SPY', name: 'S&P 500' },
-      { symbol: 'QQQ', name: 'NASDAQ 100' },
-      { symbol: 'DIA', name: 'DOW 30' },
-      { symbol: 'IWM', name: 'Russell 2000' },
+      { symbol: 'SPY', name: 'S&P 500', displaySymbol: 'SPX', multiplier: 11.25 },
+      { symbol: 'QQQ', name: 'NASDAQ', displaySymbol: 'IXIC', multiplier: 43.7 },
+      { symbol: 'DIA', name: 'DOW 30', displaySymbol: 'DJI', multiplier: 100 },
+      { symbol: 'IWM', name: 'Russell 2000', displaySymbol: 'RUT', multiplier: 10 },
     ];
 
     const indices: MarketIndex[] = [];
@@ -108,16 +114,20 @@ class FinnhubProvider implements IMarketDataProvider {
     for (const idx of indexSymbols) {
       const quote = await this.fetch<FinnhubQuote>(`/quote?symbol=${idx.symbol}`);
       if (quote && quote.c) {
+        // ETF 가격에 배수를 적용하여 실제 지수로 변환
+        const price = Math.round(quote.c * idx.multiplier * 100) / 100;
+        const change = Math.round((quote.d || 0) * idx.multiplier * 100) / 100;
+
         indices.push({
-          symbol: idx.symbol,
+          symbol: idx.displaySymbol,
           name: idx.name,
-          price: quote.c,
-          change: quote.d || 0,
-          changePercent: quote.dp || 0,
-          previousClose: quote.pc,
-          open: quote.o,
-          high: quote.h,
-          low: quote.l,
+          price: price,
+          change: change,
+          changePercent: quote.dp || 0, // 변동률은 동일
+          previousClose: quote.pc ? Math.round(quote.pc * idx.multiplier * 100) / 100 : undefined,
+          open: quote.o ? Math.round(quote.o * idx.multiplier * 100) / 100 : undefined,
+          high: quote.h ? Math.round(quote.h * idx.multiplier * 100) / 100 : undefined,
+          low: quote.l ? Math.round(quote.l * idx.multiplier * 100) / 100 : undefined,
           timestamp: new Date().toISOString(),
         });
       }

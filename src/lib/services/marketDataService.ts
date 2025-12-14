@@ -186,14 +186,14 @@ class MarketDataService {
     return { value, label };
   }
 
-  // 기본값 (API 없을 때 - 최근 실제 데이터 기반)
-  // 2024년 12월 기준 대략적인 값으로 설정
+  // 기본값 (API 없을 때 - 최근 실제 지수 기반)
+  // 2024년 12월 기준 실제 지수 값
   private getDefaultIndices(): MarketIndex[] {
     return [
-      { symbol: 'SPY', name: 'S&P 500', price: 607.51, change: 0, changePercent: 0 },
-      { symbol: 'QQQ', name: 'NASDAQ 100', price: 531.74, change: 0, changePercent: 0 },
-      { symbol: 'DIA', name: 'DOW 30', price: 438.56, change: 0, changePercent: 0 },
-      { symbol: 'IWM', name: 'Russell 2000', price: 236.12, change: 0, changePercent: 0 },
+      { symbol: 'SPX', name: 'S&P 500', price: 6827.41, change: 0, changePercent: 0 },
+      { symbol: 'IXIC', name: 'NASDAQ', price: 23195.17, change: 0, changePercent: 0 },
+      { symbol: 'DJI', name: 'DOW 30', price: 43856.00, change: 0, changePercent: 0 },
+      { symbol: 'RUT', name: 'Russell 2000', price: 2361.20, change: 0, changePercent: 0 },
     ];
   }
 
