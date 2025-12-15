@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Star,
   Brain,
+  Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -37,10 +38,16 @@ const navItems: NavItem[] = [
     description: '요약 및 알림'
   },
   {
+    href: '/recommendations',
+    label: 'AI 추천',
+    icon: Sparkles,
+    description: '매일 업데이트 추천 종목'
+  },
+  {
     href: '/ai-analysis',
-    label: 'AI 분석',
+    label: '종목 분석',
     icon: Brain,
-    description: '종목 분석 및 적정가'
+    description: '개별 종목 AI 분석'
   },
   {
     href: '/market',
