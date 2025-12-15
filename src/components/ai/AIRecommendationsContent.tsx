@@ -82,12 +82,14 @@ const categoryColors: Record<string, { bg: string; text: string; border: string 
 
 export function AIRecommendationsContent() {
   const [data, setData] = useState<RecommendationsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasStarted, setHasStarted] = useState(false);
 
   const fetchRecommendations = async () => {
     setIsLoading(true);
     setError(null);
+    setHasStarted(true);
 
     try {
       const response = await fetch('/api/ai/recommendations');
@@ -105,9 +107,83 @@ export function AIRecommendationsContent() {
     }
   };
 
-  useEffect(() => {
-    fetchRecommendations();
-  }, []);
+  // Initial state - show start button
+  if (!hasStarted && !data) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-bold dark:text-white flex items-center gap-2">
+            <Sparkles className="h-7 w-7 text-purple-600" />
+            AI 추천 종목
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            AI가 분석한 중장기 투자 추천 종목입니다
+          </p>
+        </div>
+
+        {/* Start Card */}
+        <Card className="border-0 shadow-lg">
+          <CardContent className="p-12 text-center">
+            <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-blue-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <Sparkles className="h-12 w-12 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
+              AI 종목 추천 받기
+            </h3>
+            <p className="text-slate-500 mb-2 max-w-md mx-auto">
+              AI가 현재 보유 중인 종목 데이터를 분석하여
+              <br />
+              성장주, 가치주, 배당주, 매수 기회 종목을 추천해드립니다.
+            </p>
+            <p className="text-sm text-slate-400 mb-8">
+              분석에 약 10~30초 정도 소요됩니다
+            </p>
+            <Button
+              onClick={fetchRecommendations}
+              size="lg"
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-lg px-8 py-6 rounded-xl shadow-lg"
+            >
+              <Sparkles className="h-5 w-5 mr-2" />
+              추천 시작하기
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Info Cards */}
+        <div className="grid md:grid-cols-4 gap-4">
+          <Card className="border-0 shadow-md bg-purple-50 dark:bg-purple-900/20">
+            <CardContent className="p-4 text-center">
+              <Rocket className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+              <h4 className="font-semibold text-purple-700 dark:text-purple-400">성장주</h4>
+              <p className="text-xs text-purple-600/70 mt-1">미래의 테슬라/애플</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-md bg-blue-50 dark:bg-blue-900/20">
+            <CardContent className="p-4 text-center">
+              <Gem className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+              <h4 className="font-semibold text-blue-700 dark:text-blue-400">가치주</h4>
+              <p className="text-xs text-blue-600/70 mt-1">저평가 우량주</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-md bg-green-50 dark:bg-green-900/20">
+            <CardContent className="p-4 text-center">
+              <Coins className="h-8 w-8 text-green-600 mx-auto mb-2" />
+              <h4 className="font-semibold text-green-700 dark:text-green-400">배당주</h4>
+              <p className="text-xs text-green-600/70 mt-1">버핏 스타일 장기</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-md bg-orange-50 dark:bg-orange-900/20">
+            <CardContent className="p-4 text-center">
+              <Target className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+              <h4 className="font-semibold text-orange-700 dark:text-orange-400">매수 기회</h4>
+              <p className="text-xs text-orange-600/70 mt-1">저점 매수 타이밍</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -119,7 +195,7 @@ export function AIRecommendationsContent() {
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
             AI가 추천 종목을 분석 중입니다
           </h3>
-          <p className="text-slate-500 mt-1">잠시만 기다려주세요...</p>
+          <p className="text-slate-500 mt-1">잠시만 기다려주세요... (약 10~30초)</p>
         </div>
         <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
       </div>
