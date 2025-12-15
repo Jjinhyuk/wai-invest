@@ -9,6 +9,7 @@
 ## 주요 페이지 구조
 - `/login` - Google OAuth 로그인
 - `/dashboard` - 대시보드 (포트폴리오 요약, 알림 후보)
+- `/ai-analysis` - AI 종목 분석 (투자의견, 적정가치, 리스크)
 - `/market` - 시장 현황 (지수, 지표, 섹터 히트맵, Fear&Greed)
 - `/screener` - 스크리너 (프리셋 필터, 종목 검색)
 - `/watchlist` - 관심 종목
@@ -27,6 +28,12 @@
 - 시장 현황 페이지 (실시간 API 연동)
 - 다크모드 토글
 - UI/UX 한글화
+- 관리자 모드 토글 (프로필 드롭다운)
+- **AI 종목 분석** (Claude API 연동)
+  - 투자 의견 (매수/관망/매도)
+  - 적정가치 범위
+  - 투자 포인트 및 리스크
+  - 추천 보유기간
 
 ## 데이터 소스 (Multi-Provider 지원)
 
@@ -59,6 +66,8 @@
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 FINNHUB_API_KEY=...          # 무료 API (권장)
+TWELVE_DATA_API_KEY=...      # 시장 지수용
+ANTHROPIC_API_KEY=...        # AI 분석용 (Claude API)
 # FMP_API_KEY=...            # 유료 API (선택)
 ```
 

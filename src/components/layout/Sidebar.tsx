@@ -14,6 +14,7 @@ import {
   Users,
   ChevronRight,
   Star,
+  Brain,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,12 @@ const navItems: NavItem[] = [
     label: '대시보드',
     icon: LayoutDashboard,
     description: '요약 및 알림'
+  },
+  {
+    href: '/ai-analysis',
+    label: 'AI 분석',
+    icon: Brain,
+    description: '종목 분석 및 적정가'
   },
   {
     href: '/market',
