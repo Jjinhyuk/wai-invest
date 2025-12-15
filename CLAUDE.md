@@ -29,7 +29,11 @@
 - 다크모드 토글
 - UI/UX 한글화
 - 관리자 모드 토글 (프로필 드롭다운)
-- **AI 종목 분석** (Claude API 연동)
+- **AI 추천 종목** (Google Gemini 연동)
+  - 카테고리별 추천 (성장주/가치주/배당주/매수기회)
+  - ETF 추천 및 우선순위
+  - 매일 업데이트
+- **AI 종목 분석** (Google Gemini 연동)
   - 투자 의견 (매수/관망/매도)
   - 적정가치 범위
   - 투자 포인트 및 리스크
@@ -67,7 +71,7 @@ NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 FINNHUB_API_KEY=...          # 무료 API (권장)
 TWELVE_DATA_API_KEY=...      # 시장 지수용
-ANTHROPIC_API_KEY=...        # AI 분석용 (Claude API)
+GOOGLE_AI_API_KEY=...        # AI 분석용 (Google Gemini)
 # FMP_API_KEY=...            # 유료 API (선택)
 ```
 

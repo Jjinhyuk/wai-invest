@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const dynamic = 'force-dynamic';
 
@@ -154,8 +154,8 @@ export async function POST(request: NextRequest) {
       .eq('symbol', symbol.toUpperCase())
       .single();
 
-    // Check if we have Anthropic API key
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    // Check if we have Google AI API key
+    const apiKey = process.env.GOOGLE_AI_API_KEY;
 
     if (!apiKey) {
       // Return mock data for development
@@ -168,18 +168,18 @@ export async function POST(request: NextRequest) {
           currentVsValue: '적정',
           holdingPeriod: '3~5년',
           investorType: '성장주 투자자',
-          summary: 'AI 분석을 위해 ANTHROPIC_API_KEY 설정이 필요합니다.',
+          summary: 'AI 분석을 위해 GOOGLE_AI_API_KEY 설정이 필요합니다.',
           investmentPoints: [
             'API 키 설정 후 실제 AI 분석이 제공됩니다',
             '현재는 데모 데이터입니다',
-            '환경변수에 ANTHROPIC_API_KEY를 추가하세요'
+            '환경변수에 GOOGLE_AI_API_KEY를 추가하세요'
           ],
           risks: [
             'API 키 미설정',
             '실제 분석이 아닌 데모 데이터',
             'Vercel 환경변수에도 추가 필요'
           ],
-          conclusion: 'ANTHROPIC_API_KEY를 .env.local과 Vercel 환경변수에 추가하면 실제 AI 분석을 받을 수 있습니다.'
+          conclusion: 'GOOGLE_AI_API_KEY를 .env.local과 Vercel 환경변수에 추가하면 실제 AI 분석을 받을 수 있습니다.'
         },
         ticker,
         metrics,
@@ -187,10 +187,9 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Call Claude API
-    const anthropic = new Anthropic({
-      apiKey: apiKey,
-    });
+    // Call Google Gemini API
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const stockData: StockData = {
       ticker: {
@@ -204,29 +203,25 @@ export async function POST(request: NextRequest) {
 
     const prompt = buildAnalysisPrompt(stockData);
 
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-    });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const responseText = response.text();
 
     // Parse the response
-    const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
-
     let analysis;
     try {
-      // Extract JSON from response (in case there's extra text)
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      // Extract JSON from response (handle markdown code blocks)
+      let jsonStr = responseText;
+      const jsonMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/);
       if (jsonMatch) {
-        analysis = JSON.parse(jsonMatch[0]);
+        jsonStr = jsonMatch[1];
       } else {
-        throw new Error('No JSON found in response');
+        const plainMatch = responseText.match(/\{[\s\S]*\}/);
+        if (plainMatch) {
+          jsonStr = plainMatch[0];
+        }
       }
+      analysis = JSON.parse(jsonStr);
     } catch {
       console.error('Failed to parse AI response:', responseText);
       return NextResponse.json({

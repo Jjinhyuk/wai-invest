@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const dynamic = 'force-dynamic';
 
@@ -183,14 +183,14 @@ export async function GET(request: NextRequest) {
 기술주와 성장주는 금리 민감도가 높으며, 가치주와 배당주는 상대적으로 안정적입니다.
 장기 투자자에게는 좋은 매수 기회가 될 수 있는 종목들이 있습니다.`;
 
-    // Check if we have Anthropic API key
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    // Check if we have Google AI API key
+    const apiKey = process.env.GOOGLE_AI_API_KEY;
 
     if (!apiKey) {
       // Return demo data
       return NextResponse.json({
         isDemo: true,
-        marketAnalysis: "ANTHROPIC_API_KEY가 설정되지 않아 데모 데이터를 표시합니다. 실제 AI 추천을 받으려면 API 키를 설정하세요.",
+        marketAnalysis: "GOOGLE_AI_API_KEY가 설정되지 않아 데모 데이터를 표시합니다. 실제 AI 추천을 받으려면 API 키를 설정하세요.",
         updatedAt: new Date().toISOString().split('T')[0],
         categories: [
           {
@@ -209,7 +209,7 @@ export async function GET(request: NextRequest) {
                 confidence: 3,
                 reason: "API 키 설정 후 실제 AI 추천을 받을 수 있습니다.",
                 risks: "데모 데이터입니다",
-                catalysts: "ANTHROPIC_API_KEY 환경변수 추가 필요"
+                catalysts: "GOOGLE_AI_API_KEY 환경변수 추가 필요"
               }
             ]
           },
@@ -247,39 +247,34 @@ export async function GET(request: NextRequest) {
             priority: 1
           }
         ],
-        disclaimer: "데모 모드입니다. ANTHROPIC_API_KEY를 설정하면 실제 AI 추천을 받을 수 있습니다."
+        disclaimer: "데모 모드입니다. GOOGLE_AI_API_KEY를 설정하면 실제 AI 추천을 받을 수 있습니다."
       });
     }
 
-    // Call Claude API
-    const anthropic = new Anthropic({
-      apiKey: apiKey,
-    });
+    // Call Google Gemini API
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = buildRecommendationPrompt(stocks, marketContext);
 
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-    });
-
-    // Parse the response
-    const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const responseText = response.text();
 
     let recommendations;
     try {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      // Extract JSON from response (handle markdown code blocks)
+      let jsonStr = responseText;
+      const jsonMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/);
       if (jsonMatch) {
-        recommendations = JSON.parse(jsonMatch[0]);
+        jsonStr = jsonMatch[1];
       } else {
-        throw new Error('No JSON found in response');
+        const plainMatch = responseText.match(/\{[\s\S]*\}/);
+        if (plainMatch) {
+          jsonStr = plainMatch[0];
+        }
       }
+      recommendations = JSON.parse(jsonStr);
     } catch {
       console.error('Failed to parse AI response:', responseText);
       return NextResponse.json({
