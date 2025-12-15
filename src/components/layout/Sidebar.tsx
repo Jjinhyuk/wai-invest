@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { useAdminMode } from '@/contexts/AdminModeContext';
 
 interface NavItem {
   href: string;
@@ -95,6 +96,7 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const { isAdminMode } = useAdminMode();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -107,67 +109,81 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
         {/* Logo */}
         <div className="flex h-16 items-center px-6 border-b border-slate-700">
           <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
-              <TrendingUp className="h-5 w-5 text-white" />
+            <div className={cn(
+              "w-9 h-9 rounded-lg flex items-center justify-center",
+              isAdminMode ? "bg-orange-600" : "bg-blue-600"
+            )}>
+              {isAdminMode ? (
+                <Shield className="h-5 w-5 text-white" />
+              ) : (
+                <TrendingUp className="h-5 w-5 text-white" />
+              )}
             </div>
             <div>
               <span className="text-lg font-bold">WAI-Invest</span>
-              <p className="text-xs text-slate-400">미국 주식 분석</p>
+              <p className={cn(
+                "text-xs",
+                isAdminMode ? "text-orange-400" : "text-slate-400"
+              )}>
+                {isAdminMode ? '관리자 모드' : '미국 주식 분석'}
+              </p>
             </div>
           </Link>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-6 px-4">
-          {/* Main Menu */}
-          <div className="mb-8">
-            <p className="px-3 mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-              메인 메뉴
-            </p>
-            <div className="space-y-1">
-              {navItems.map((item) => {
-                const isActive = pathname === item.href ||
-                  (item.href !== '/dashboard' && pathname.startsWith(item.href));
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      'group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200',
-                      isActive
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                    )}
-                  >
-                    <div className={cn(
-                      'flex items-center justify-center w-9 h-9 rounded-lg transition-colors',
-                      isActive ? 'bg-blue-500' : 'bg-slate-800 group-hover:bg-slate-700'
-                    )}>
-                      <item.icon className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium">{item.label}</p>
-                      <p className={cn(
-                        'text-xs',
-                        isActive ? 'text-blue-200' : 'text-slate-500'
-                      )}>
-                        {item.description}
-                      </p>
-                    </div>
-                    {isActive && (
-                      <ChevronRight className="h-4 w-4 text-blue-200" />
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Admin Menu */}
-          {isAdmin && (
-            <div>
+          {/* Main Menu - 관리자 모드가 아닐 때만 표시 */}
+          {!isAdminMode && (
+            <div className="mb-8">
               <p className="px-3 mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                관리자
+                메인 메뉴
+              </p>
+              <div className="space-y-1">
+                {navItems.map((item) => {
+                  const isActive = pathname === item.href ||
+                    (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        'group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200',
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                          : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                      )}
+                    >
+                      <div className={cn(
+                        'flex items-center justify-center w-9 h-9 rounded-lg transition-colors',
+                        isActive ? 'bg-blue-500' : 'bg-slate-800 group-hover:bg-slate-700'
+                      )}>
+                        <item.icon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium">{item.label}</p>
+                        <p className={cn(
+                          'text-xs',
+                          isActive ? 'text-blue-200' : 'text-slate-500'
+                        )}>
+                          {item.description}
+                        </p>
+                      </div>
+                      {isActive && (
+                        <ChevronRight className="h-4 w-4 text-blue-200" />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Admin Menu - 관리자 모드일 때만 표시 */}
+          {isAdminMode && (
+            <div>
+              <p className="px-3 mb-3 text-xs font-semibold uppercase tracking-wider text-orange-400">
+                관리자 메뉴
               </p>
               <div className="space-y-1">
                 {adminItems.map((item) => {
@@ -204,6 +220,22 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
                     </Link>
                   );
                 })}
+              </div>
+
+              {/* 일반 모드로 돌아가기 링크 */}
+              <div className="mt-6 pt-6 border-t border-slate-700">
+                <Link
+                  href="/dashboard"
+                  className="group flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-200"
+                >
+                  <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-slate-800 group-hover:bg-slate-700">
+                    <LayoutDashboard className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">일반 모드로</p>
+                    <p className="text-xs text-slate-500">대시보드로 이동</p>
+                  </div>
+                </Link>
               </div>
             </div>
           )}
